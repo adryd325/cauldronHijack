@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.adryd.cauldronHijack.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "command.MixinCauldronClientCommandInternals",
+    "command.MixinCauldronClientCommandSource_fabric",
+    "command.MixinCauldronClientCommandSource_quilt",
+    "command.MixinClientPlayerEntity",
+    "command.MixinClientPlayNetworkHandler",
+    "command.MixinCommandSuggestor",
+    "command.MixinFabricClientCommandInternals",
+    "command.MixinQuiltClientCommandInternals",
+    "command.MixinScreen",
+    "keybind.MixinGameOptions"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
