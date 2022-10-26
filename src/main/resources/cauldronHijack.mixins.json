@@ -5,19 +5,19 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "command.MixinCauldronClientCommandInternals",
-    "command.MixinCauldronClientCommandSource_fabric",
     "command.MixinCauldronClientCommandSource_quilt",
     "command.MixinClientPlayerEntity",
     "command.MixinClientPlayNetworkHandler",
     "command.MixinCommandSuggestor",
-    "command.MixinFabricClientCommandInternals",
     "command.MixinQuiltClientCommandInternals",
     "command.MixinScreen",
     "keybind.MixinGameOptions"
   ],
-  "client": [
-  ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "command.IMixinClientPlayerEntity",
+    "command.MixinChatScreen"
+  ]
 }

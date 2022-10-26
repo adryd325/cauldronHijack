@@ -14,40 +14,40 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameOptions.class)
 public abstract class MixinGameOptions {
-    @Redirect(
-            method = "accept",
-            slice = @Slice(
-                    from = @At(
-                            value = "INVOKE",
-                            target = "Lnet/minecraft/client/option/KeyBinding;getBoundKeyTranslationKey()Ljava/lang/String;"
-                    ),
-                    to = @At(
-                            value = "INVOKE",
-                            target = "Lnet/minecraft/client/option/KeyBinding;setBoundKey(Lnet/minecraft/client/util/InputUtil$Key;)V"
-                    )
-            ),
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/lang/String;equals(Ljava/lang/Object;)Z"
-            )
-    )
-    private boolean equals(String instance, Object comparison) {
-        return false;
-    }
+	@Redirect(
+			method = "accept",
+			slice = @Slice(
+					from = @At(
+							value = "INVOKE",
+							target = "Lnet/minecraft/client/option/KeyBinding;getBoundKeyTranslationKey()Ljava/lang/String;"
+					),
+					to = @At(
+							value = "INVOKE",
+							target = "Lnet/minecraft/client/option/KeyBinding;setBoundKey(Lnet/minecraft/client/util/InputUtil$Key;)V"
+					)
+			),
+			at = @At(
+					value = "INVOKE",
+					target = "Ljava/lang/String;equals(Ljava/lang/Object;)Z"
+			)
+	)
+	private boolean equals(String instance, Object comparison) {
+		return false;
+	}
 
-    @Redirect(method = "accept", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;setBoundKey(Lnet/minecraft/client/util/InputUtil$Key;)V"))
-    private void loadKeybindsOwnConfig(KeyBinding keyBinding, InputUtil.Key code) {
-        if (KeybindInternals.root.has(keyBinding.getTranslationKey())) {
-            keyBinding.setBoundKey(InputUtil.fromTranslationKey(KeybindInternals.root.get(keyBinding.getTranslationKey()).getAsString()));
-        } else {
-            KeybindInternals.root.addProperty(keyBinding.getTranslationKey(), code.getTranslationKey());
-            keyBinding.setBoundKey(code);
-        }
-    }
+	@Redirect(method = "accept", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;setBoundKey(Lnet/minecraft/client/util/InputUtil$Key;)V"))
+	private void loadKeybindsOwnConfig(KeyBinding keyBinding, InputUtil.Key code) {
+		if (KeybindInternals.root.has(keyBinding.getTranslationKey())) {
+			keyBinding.setBoundKey(InputUtil.fromTranslationKey(KeybindInternals.root.get(keyBinding.getTranslationKey()).getAsString()));
+		} else {
+			KeybindInternals.root.addProperty(keyBinding.getTranslationKey(), code.getTranslationKey());
+			keyBinding.setBoundKey(code);
+		}
+	}
 
-    @Inject(method = "setKeyCode", at = @At(value = "HEAD"))
-    private void setKeyInConfig(KeyBinding keyBinding, InputUtil.Key code, CallbackInfo ci) {
-        KeybindInternals.root.addProperty(keyBinding.getTranslationKey(), code.getTranslationKey());
-        Jason.write();
-    }
+	@Inject(method = "setKeyCode", at = @At(value = "HEAD"))
+	private void setKeyInConfig(KeyBinding keyBinding, InputUtil.Key code, CallbackInfo ci) {
+		KeybindInternals.root.addProperty(keyBinding.getTranslationKey(), code.getTranslationKey());
+		Jason.write();
+	}
 }

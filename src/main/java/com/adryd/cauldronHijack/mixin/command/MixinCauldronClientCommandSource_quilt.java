@@ -13,11 +13,11 @@ public abstract class MixinCauldronClientCommandSource_quilt implements QuiltCli
 
     @Override
     public Object getMeta(String key) {
-        return ((QuiltClientCommandSource) client.getNetworkHandler().getCommandSource()).getMeta(key);
+        return client.getNetworkHandler().getCommandSource().getMeta(key);
     }
 
     @Override
     public void setMeta(String key, Object value) {
-        ((QuiltClientCommandSource) client.getNetworkHandler().getCommandSource()).setMeta(key, value);
+        client.getNetworkHandler().getCommandSource().setMeta(key, value);
     }
 }

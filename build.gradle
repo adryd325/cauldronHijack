@@ -1,84 +1,74 @@
 plugins {
-	id 'fabric-loom' version '0.10-SNAPSHOT'
-	id 'org.ajoberstar.grgit' version '4.1.0'
-//	id 'io.github.juuxel.loom-quiltflower-mini' version '1.1.0'
+	alias libs.plugins.quilt.loom
+	alias libs.plugins.grgit
 	id 'maven-publish'
+
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-mod_version = "${project.mod_version}${getVersionMetadata()}"
-version = "mc${project.minecraft_version}-${mod_version}"
-archivesBaseName = project.archives_base_name
+version = project.version + getVersionMetadata()
+archivesBaseName = project.archives_base_name + "-mc" + project.minecraft_version
 group = project.maven_group
-
-sourceSets {
-	testmod {
-		compileClasspath += sourceSets.main.compileClasspath
-		runtimeClasspath += sourceSets.main.runtimeClasspath
-	}
-}
 
 repositories {
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+	// for more information about repositories.{
 	maven {
-		name 'QuiltSnapshot'
-		url 'https://maven.quiltmc.org/repository/snapshot'
-		content {
-			includeGroup 'org.quiltmc.fabric_api_qsl'
-			includeGroupByRegex 'org.quiltmc.qsl(.[a-z_]+)?'
-		}
+		name = 'adryd'
+		url = 'https://maven.svc.adryd.com/releases'
 	}
 }
 
+// All the dependencies are declared at gradle/libs.version.toml and referenced with "libs.<id>"
+// See https://docs.gradle.org/current/userguide/platforms.html for information on how version catalogs work.
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	minecraft libs.minecraft
 
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings variantOf(libs.yarn) { classifier "v2" }
 
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation libs.quilt.loader
 
-	modImplementation files("./libs/cauldron-mc22w03a-0.1.0-alpha2.jar")
-	include files("./libs/cauldron-mc22w03a-0.1.0-alpha2.jar")
+	modImplementation libs.quilted.fabric.api
 
-	modImplementation fabricApi.module("fabric-command-api-v1", project.fabric_version)
-	include fabricApi.module("fabric-command-api-v1", project.fabric_version)
-
-	modImplementation fabricApi.module("fabric-key-binding-api-v1", project.fabric_version)
-	include fabricApi.module("fabric-key-binding-api-v1", project.fabric_version)
-
-	modCompileOnly "org.quiltmc.qsl.command:client_command:${project.qsl_client_command_version}+${getMCVersionString()}-SNAPSHOT"
-
+	modImplementation libs.cauldron
 }
 
 processResources {
-	inputs.property "version", mod_version
+	inputs.property "version", version
 
-	filesMatching("fabric.mod.json") {
-		expand "version": mod_version
+	filesMatching('quilt.mod.json') {
+		expand "version": version
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
 	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
 	it.options.release = 17
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
+	// Still required by IDEs such as Eclipse and Visual Studio Code
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+
+	// If this mod is going to be a library, then it should also generate Javadocs in order to aid with development.
+	// Uncomment this line to generate them.
+	// withJavadocJar()
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.archivesBaseName}" }
 	}
 }
 
@@ -92,16 +82,18 @@ publishing {
 
 	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+		maven {
+			name = "adryd"
+			credentials(PasswordCredentials)
+			url = System.getenv("BUILD_RELEASE") == "true" ? uri("https://maven.svc.adryd.com/releases") : uri("https://maven.svc.adryd.com/snapshots")
+		}
 	}
 }
 
-String getVersionMetadata() {
+def getVersionMetadata() {
 	def release = System.getenv("BUILD_RELEASE") == "true"
 	def build_ci_branch = System.getenv("CI_COMMIT_BRANCH")
+
 
 	if (release) {
 		return ""
@@ -120,18 +112,4 @@ String getVersionMetadata() {
 	}
 
 	return "+" + new Date().format('yyyyMMdd.HHmmss')
-}
-
-
-boolean isMCVersionNonRelease() {
-	return project.minecraft_version.matches('^\\d\\dw\\d\\d[a-z]$')
-			|| project.minecraft_version.matches('\\d+\\.\\d+-(pre|rc)(\\d+)')
-}
-
-String getMCVersionString() {
-	if (isMCVersionNonRelease()) {
-		return project.minecraft_version
-	}
-	def version = project.minecraft_version.split('\\.')
-	return version[0] + '.' + version[1]
 }
